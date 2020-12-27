@@ -355,40 +355,44 @@ class AppWindow:
             width, height, dimension= np.shape(color_img)
             origin_image_array.append(color_img)
             
-            def pca_process(input_image):
-                image_index, width, height, dimension = np.shape(input_image)
-                flatten_image = np.reshape(input_image, (input_image.shape[0], -1))
+            # def pca_process(input_image):
+            #     width, height, dimension = np.shape(input_image)
+            #     flatten_image = np.reshape(input_image, (input_image.shape[0], -1))
 
-                pca = PCA(n_components=50,
-                        random_state=9527)
-                pipe = make_pipeline(StandardScaler(), pca)
-                print(pipe)
-                transform_image = pca.fit_transform(flatten_image)
-                reconstruction_image = pca.inverse_transform(transform_image)
-                reconstruction_image = minmax_scale(pca.components_, axis = 1)
-                print(reconstruction_image.shape)
-                reconstruction_image = np.reshape(reconstruction_image, (width, height, dimension))
-                normalizeImage = np.zeros((width, height, dimension))
-                reconstruction_image = cv2.normalize(reconstruction_image, normalizeImage, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
-                
-                # pca = PCA(component_rate)
-                # lower_dimension_data = pca.fit_transform(input_image)
-                # approximation = pca.inverse_transform(lower_dimension_data)
-                # approximation = np.reshape(approximation, (width, height))
-                # normalizeImage = np.zeros((width, height))
-                # approximation = cv2.normalize(approximation, normalizeImage, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
-                return reconstruction_image
+            #     # pca = PCA(n_components=34,
+            #             # random_state=9527)
+            #     pca = PCA(0.85)
+            #     # pipe = make_pipeline(StandardScaler(), pca)
+            #     # print(pipe)
+            #     transform_image = pca.fit_transform(flatten_image)
+            #     reconstruction_image = pca.inverse_transform(transform_image)
+            #     reconstruction_image = minmax_scale(pca.components_, axis = 1)
+            #     print(reconstruction_image.shape)
+            #     reconstruction_image = np.reshape(reconstruction_image, (width, height, dimension))
+            #     normalizeImage = np.zeros((width, height, dimension))
+            #     reconstruction_image = cv2.normalize(reconstruction_image, normalizeImage, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+            #     return reconstruction_image
 
-            # R_dimension = color_img[:, :, 0]
-            # G_dimension = color_img[:, :, 1]
-            # B_dimension = color_img[:, :, 2]
+            def pca_process(input_image, component_rate):
+                pca = PCA(component_rate)
+                lower_dimension_data = pca.fit_transform(input_image)
+                approximation = pca.inverse_transform(lower_dimension_data)
+                approximation = np.reshape(approximation, (width, height))
+                normalizeImage = np.zeros((width, height))
+                approximation = cv2.normalize(approximation, normalizeImage, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+                return approximation
 
-            # approximation_R = pca_process(R_dimension, 0.85)
-            # approximation_G = pca_process(G_dimension, 0.85)
-            # approximation_B = pca_process(B_dimension, 0.85)
 
-            # reconstructionImage = np.dstack((approximation_R, approximation_G, approximation_B))
-            reconstructionImage = pca_process(color_img)
+            R_dimension = color_img[:, :, 0]
+            G_dimension = color_img[:, :, 1]
+            B_dimension = color_img[:, :, 2]
+
+            approximation_R = pca_process(R_dimension, 0.85)
+            approximation_G = pca_process(G_dimension, 0.85)
+            approximation_B = pca_process(B_dimension, 0.85)
+
+            reconstructionImage = np.dstack((approximation_R, approximation_G, approximation_B))
+            # reconstructionImage = pca_process(color_img)
             reconstruction_image_array.append(reconstructionImage)        
 
         fig, axs= plt.subplots(4, 17, figsize = [50, 15])
@@ -440,9 +444,20 @@ class AppWindow:
             approximation_B = pca_process(B_dimension, 0.85)
 
             reconstructionImage = np.dstack((approximation_R, approximation_G, approximation_B))
-            reconstructionImage_flatten = reconstructionImage.flatten()
-            color_img_flatten = color_img.flatten()
-            error_value = np.linalg.norm(color_img_flatten - reconstructionImage_flatten, axis=0).sum()/30000
+            # reconstructionImage_flatten = reconstructionImage.flatten()
+            # color_img_flatten = color_img.flatten()
+            # error_value = np.linalg.norm(color_img_flatten - reconstructionImage_flatten, axis=0).sum()
+
+            # gray_image = cv2.cvtColor(color_img, cv2.COLOR_RGB2GRAY)
+            # gray_reconstructionImage = cv2.cvtColor(reconstructionImage, cv2.COLOR_RGB2GRAY)
+            # gray_image_flatten = gray_image.flatten()
+            # gray_reconstructionImage_flatten = gray_reconstructionImage.flatten()
+            # error_value = np.linalg.norm(gray_image_flatten - gray_reconstructionImage_flatten, axis=0).sum()
+
+            gray_image = cv2.cvtColor(color_img, cv2.COLOR_RGB2GRAY)
+            gray_reconstructionImage = cv2.cvtColor(reconstructionImage, cv2.COLOR_RGB2GRAY)
+            error_value = np.linalg.norm(gray_image - gray_reconstructionImage)
+
             print(fname + ' Reconstruction Error: ', error_value)
                 
 
